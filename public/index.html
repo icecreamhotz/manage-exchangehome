@@ -10,6 +10,8 @@
       homescreen on Android. See https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/
     -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
+    <link href="https://fonts.googleapis.com/css?family=Basic" rel="stylesheet">
+    <link rel="stylesheet" href="../src/asset/css/exchangehome.css">
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
@@ -34,7 +36,25 @@
       The build step will place the bundled scripts into the <body> tag.
 
       To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
+      To create a production bundle, use `npm r un build` or `yarn build`.
     -->
+    <script src="https://code.jquery.com/jquery-1.11.2.js"></script>
   </body>
 </html>
+
+<script>
+  $('a.sidebar-toggle').click(function () {
+      $('.ui.sidebar')
+      .sidebar('toggle')
+    ;
+  })
+  
+  $(function () {
+    $(document).scroll(function () {
+      var $nav = $(".fixed-top");
+      $nav.toggleClass('scrolled', $(this).scrollTop() > $nav.height());
+    });
+  });
+
+  </script>
+  

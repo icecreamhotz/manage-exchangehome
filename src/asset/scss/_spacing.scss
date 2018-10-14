@@ -1,0 +1,15 @@
+// stylelint-disable declaration-no-important
+
+// Margin and Padding
+
+@mixin make-spaces() {
+  @each $attr-short, $attr-long in $space-prefixes { 
+    @each $value in $space-values {
+      .#{$attr-short}-#{$value} {
+        #{$attr-long}: #{$value}#{'px'} #{'!important'};
+      }
+    }
+  }
+}
+
+@include make-spaces();
