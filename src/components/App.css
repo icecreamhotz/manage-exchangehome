@@ -1,3 +1,8 @@
+body {
+  font-family: 'Lato', sans-serif !important;
+}
+
+
 .ui.form {
   width: 100%;
 }
@@ -20,7 +25,7 @@
 
 .image-area {
   position: relative;
-  width: 50%;
+  width: 100%;
   background: #333;
 }
 .image-area img{
@@ -94,4 +99,52 @@ right: -11px;
     transform: translateY(-20px);
   }
 }
+
+.seperate-row {
+  display: block !important;
+}
+
+.price-condo {
+  font-size: 0.95em;
+  font-weight: bold;
+}
+
+.bath {
+  font-weight: 400;
+  color: rgba(0,0,0,.6);
+}
+
+.utilities-img {
+  float:left;
+  margin-right: 5px;
+}
+
+.utilitie-text {
+  float:left;
+  max-width: 100%;
+}
+
+.utilitie-text span {
+  float:left;
+  clear:both;
+}
+
+.text-description1 {
+  line-height: 1.5rem;
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+  font-weight: bold;
+}
+
+.text-description2 {
+  font-size: 0.9rem;
+  color: #99e211;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 0.9rem;
+  font-weight: bold;
+}
+
+
 
