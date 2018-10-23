@@ -62,7 +62,7 @@
   background-color: #DDDDDD; }
 
 .bg-black {
-  background-color: #111111 !important; }
+  background-color: #111111; }
 
 .bg-blackpale {
   background-color: #1111115c; }
@@ -799,5 +799,20 @@
 
 .ml-100 {
   margin-left: 100px !important; }
+
+.bg-wit {
+  background-color: red !important; }
+
+.ui.secondary.inverted.pointing.menu .active.item {
+  border-color: #646971 !important; }
+
+.text-wit {
+  color: red; }
+
+.ui.list.footer > a.item i.icon {
+  color: white; }
+
+.ui.list.footer > a.item i.icon:hover {
+  color: #646971; }
 
 /*# sourceMappingURL=exchangehome.css.map */

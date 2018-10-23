@@ -1,0 +1,16 @@
+.bg-wit {
+    background-color: $witcolor !important;
+    
+}
+
+.ui.secondary.inverted.pointing.menu .active.item {
+    border-color: $gray !important;
+}
+
+.text-wit {
+    color: $witcolor;
+}
+
+.ui.list.footer>a.item i.icon{color:white}.ui.list.footer>a.item i.icon:hover{
+    color: $gray; 
+} 

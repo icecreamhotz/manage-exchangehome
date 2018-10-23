@@ -1,11 +1,12 @@
 import React , { Component } from 'react';
 import axios from 'axios';
-import { Button, Header, Image, Modal, TransitionablePortal, Icon } from 'semantic-ui-react'
+import { Button, Header, Modal, TransitionablePortal, Icon } from 'semantic-ui-react'
 import SweetAlert from 'sweetalert-react'; // eslint-disable-line import/no-extraneous-dependencies
 import 'sweetalert/dist/sweetalert.css';
 import { Dropdown } from 'semantic-ui-react'
 import { validateCondoForm } from '../validate/condoForm.js'
 import SimpleReactValidator from 'simple-react-validator'
+import Loader from '../settings/Loader.js';
 
 class EditCondo extends React.Component {
 
@@ -15,7 +16,6 @@ class EditCondo extends React.Component {
         this.state = {
             img: this.props.data[0].imgs,
             open: false,
-            imgUpload: [],
             activeRent: (props.data.estate_sale_type != 0 ? 'active' : ''),
             activeSell: (props.data.estate_sale_type == 0 ? 'active' : ''),
             title: props.data.estate_title,
@@ -27,18 +27,41 @@ class EditCondo extends React.Component {
             price: props.data.estate_price,
             address: props.data.estate_address,
             description: props.data.estate_description,
+            title_edit: props.title,
+            updateDataOnParent: props.clickToUpdate,
             errorClass: [false, false, false, false, false],
             showerror: false,
             showedit: false,
             showsuccess: false,
+            showloader: false,
             type_option: [
                 {
-                    text: 'Condo',
+                    text: 'Condominium',
                     value: '1'
                 },
                 {
-                    text: 'Home',
+                    text: 'Townhouse',
                     value: '2'
+                },
+                {
+                    text: 'Singlehouse',
+                    value: '3'
+                },
+                {
+                    text: 'Land',
+                    value: '4'
+                },
+                {
+                    text: 'Detached House',
+                    value: '5'
+                },
+                {
+                    text: 'Commercial Building',
+                    value: '6'
+                },
+                {
+                    text: 'Hotel & Resort',
+                    value: '7'
                 }
             ],
             roomTotal: [
@@ -86,9 +109,11 @@ class EditCondo extends React.Component {
         }   
         this.onImageChange = this.onImageChange.bind(this)
         this.removeImage = this.removeImage.bind(this)
-        this.setValueSaleType = this.setValueSaleType.bind(this)
+        this.setValueSellTypeClick = this.setValueSellTypeClick.bind(this)
         this.handleInputChange = this.handleInputChange.bind(this);
         this.updateData = this.updateData.bind(this)
+        this.onChangeDropDown = this.onChangeDropDown.bind(this)
+        this.setValueRentTypeClick = this.setValueRentTypeClick.bind(this)
     }
 
     componentDidMount() {
@@ -111,7 +136,6 @@ class EditCondo extends React.Component {
         for(let nameloop of data.keys()) {
             if(nameloop !== 'type' && nameloop !== 'bedroom' && nameloop !== 'bathroom') { 
                 const classReturn = await validateCondoForm(count, this.state.errorClass, nameloop, name, value)
-                console.log(classReturn)
                 await this.setState({errorClass: classReturn}, function() {  
                     count += 1
                 })
@@ -120,8 +144,12 @@ class EditCondo extends React.Component {
         this.setState({[name]: value})
     }
 
-    setValueSaleType = (value) => {
-        this.setState({sellType: value, activeRent: (this.state.activeSell === 'active' ? 'active' : ''), activeSell: (this.state.activeRent === 'active' ? 'active' : '')})
+    setValueSellTypeClick = (value) => {
+        this.setState({sellType: value, activeRent: '', activeSell: 'active'})
+    }
+
+    setValueRentTypeClick = (value) => {
+        this.setState({sellType: value, activeRent: 'active', activeSell: ''})
     }
 
     closeConfigShow = (closeOnEscape, closeOnDimmerClick) => () => {
@@ -156,7 +184,7 @@ class EditCondo extends React.Component {
     }
 
     updateData = async (event) => {
-        const mapImage = this.state.img.map(item => JSON.stringify(item.img_base).replace(/['"]+/g, ''))
+        const mapImage = this.state.img.map(item => JSON.stringify(item.img_base).replace(/['"]+/g, '')) // replace for remove the double quotes
         const getMap = mapImage.reduce((r, e) => r.push(e) && r, [])
         
         this.setState({showedit: false})
@@ -184,6 +212,7 @@ class EditCondo extends React.Component {
                 this.setState({showerror: true})
             }, 200);
         } else {
+            this.setState({showloader: true})
             let req = new FormData()
 
             req.append('title', this.state.title)
@@ -198,8 +227,8 @@ class EditCondo extends React.Component {
             req.append('img', JSON.stringify(getMap))
         
             await axios.post(`http://www.witrealty.co/api/estates/update/${this.props.data.estate_id}`, req).then((response) => {
-                console.log(response.data)
-                this.setState({showsuccess: true})
+                this.setState({showsuccess: true, showloader: false})
+                this.state.updateDataOnParent()
             })
         }
     }
@@ -210,11 +239,18 @@ class EditCondo extends React.Component {
         this.setState({img: filterImageArray})
     }
 
+     onChangeDropDown = (e, data) => {
+        let namedropdown = data.name
+        let valuedropdown = data.value
+        this.setState({[namedropdown]: valuedropdown})
+    }
+
+
     render() {
         const { open, closeOnEscape, closeOnDimmerClick } = this.state
         return(
             <div style={{display:'inline'}}>
-                <Button onClick={this.closeConfigShow(false, true)} icon='pencil alternate' color='green'></Button>
+            <button class="ui icon green button" onClick={this.closeConfigShow(false, true)}><i class="pencil alternate icon"></i>{this.state.title_edit}</button>
                         <Modal
                             open={open}
                             closeOnEscape={closeOnEscape}
@@ -225,7 +261,10 @@ class EditCondo extends React.Component {
                             >
                             <Modal.Header>Edit Form</Modal.Header>
                             <Modal.Content>
-                        <div class="ui text container grid" >
+                        <div class="ui text container grid pt-30 pb-30" >
+                            <div className={`loader-submit ${this.state.showloader ? '' : 'hide-loader'}`}>
+                                <div class="loader"></div>
+                            </div>
                         <form class="ui form" ref="formCondo">
                             <div className={"field " + (this.state.errorClass[0] ? 'error' : '')}>
                                 <label>Title</label>
@@ -236,12 +275,12 @@ class EditCondo extends React.Component {
                                     <div class="two fields">
                                         <div class="field">
                                             <label>Type</label>
-                                             <Dropdown name="type" value={this.state.type} fluid selection options={this.state.type_option} onChange={this.handleInputChange}/>
+                                             <Dropdown name="type" value={this.state.type} fluid selection options={this.state.type_option} onChange={this.onChangeDropDown}/>
                                         </div>
                                         <div className={"field " + (this.state.errorClass[1] ? 'error' : '')}>
                                             <label>Size</label>
                                             <input type="number" name="size" value={this.state.size} onChange={this.handleInputChange} />
-                                             {this.validator.message('size', this.state.size, 'integer')}
+                                             {this.validator.message('size', this.state.size, 'decimal')}
                                         </div>
                                     </div>
                                 </div>
@@ -261,10 +300,10 @@ class EditCondo extends React.Component {
                                     <label>Selltype</label>
                                     <div class="two fields">
                                         <div class="field">
-                                            <button type="button" className={`fluid ui inverted green button ${this.state.activeRent}`} onClick={() => {this.setValueSaleType(true)}}>Rent</button>
+                                            <button type="button" className={`fluid ui inverted green button ${this.state.activeRent}`} onClick={() => {this.setValueRentTypeClick(true)}}>Rent</button>
                                         </div>
                                         <div class="field">
-                                            <button type="button" className={`fluid ui inverted blue button ${this.state.activeSell}`} onClick={() => {this.setValueSaleType(false)}}>Sell</button>
+                                            <button type="button" className={`fluid ui inverted blue button ${this.state.activeSell}`} onClick={() => {this.setValueSellTypeClick(false)}}>Sell</button>
                                         </div>
                                     </div>
                                 </div>
@@ -288,7 +327,7 @@ class EditCondo extends React.Component {
                                         { this.state.img.map((item, index) => {
                                         return  <div class="column pt-20 pb-20">
                                                     <div class="image-area">
-                                                        <div><img id="target" src={atob(item.img_base)}/>
+                                                        <div><img id="target" src={atob(item.img_base)} alt={this.state.title}/>
                                                         <button class="remove-image" style={{display:"inline"}}  type="button" onClick={() => {this.removeImage(item)}}>&#215;</button></div>
                                                     </div>
                                                 </div>
