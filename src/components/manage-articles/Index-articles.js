@@ -40,7 +40,6 @@ class HomeCondo extends React.Component {
 
     fetchArticleData = () => {
         axios.get('http://www.witrealty.co/api/forums').then((response) => {
-            console.log(response)
             const data = response.data
             this.setState( { articles: data, loading: false })
         })

@@ -33,7 +33,7 @@ class EditCondo extends React.Component {
         }   
 
         this.uploadImageCallBack = this.uploadImageCallBack.bind(this)
-        this.imageToDataUrl = this.imageToDataUrl.bind(this)
+       // this.imageToDataUrl = this.imageToDataUrl.bind(this)
         this.onImageChange = this.onImageChange.bind(this)
         this.removeImage = this.removeImage.bind(this)
         this.handleTab = this.handleTab.bind(this);
@@ -89,39 +89,57 @@ class EditCondo extends React.Component {
         });
     }
 
-    uploadImageCallBack(file) {
-        return new Promise(
-        (resolve, reject) => {
-            const reader = new FileReader(); // eslint-disable-line no-undef
-            reader.onload = (e) => {
-                if(file.size > 50000) {
-                    let image = new Image()
-                    image.onload = () => {
-                        let tmp = this.imageToDataUrl(image, image.width / 10, image.height / 10)
-                        console.log('s')
-                        resolve({ data: { link: tmp } });
-                    }
-                    image.src = e.target.result
-                } else {
-                    console.log('s')
-                    resolve({ data: { link: e.target.result } });
-                }
-            }
-            reader.onerror = e => reject(e);
-            reader.readAsDataURL(file);
-        });
-    }
+     uploadImageCallBack = (file) => {
+    return new Promise(
+      (resolve, reject) => {
+        const reader = new FileReader(); // eslint-disable-line no-undef
+        reader.onload = (e) => {
+      
+            let image = new Image()
+            image.src = e.target.result
+                image.onload = () => {          
+                    let canvas = document.createElement("canvas")
+                    var ctx = canvas.getContext("2d")
 
-    imageToDataUrl(img, width, height) {
+                    var MAX_WIDTH = 500;
+                    var MAX_HEIGHT = 300;
+                    var width = image.width;
+                    var height = image.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(image, 0, 0, width, height);
+                    let imgnaja = canvas.toDataURL();
+              resolve({ data: { link: imgnaja } });
+            }
+        }
+        reader.onerror = e => reject(e);
+        reader.readAsDataURL(file);
+      });
+  }
+
+ /*   imageToDataUrl(img, width, height) {
         let canvas = document.createElement('canvas')
         let ctx = canvas.getContext('2d')
         canvas.width = width
         canvas.height = height
         ctx.drawImage(img, 0, 0, width, height)
         return canvas.toDataURL()
-    }
+    }*/
 
-    onImageChange(event) {
+      onImageChange = (event) => {
         let files = event.target.files
         if(!files[0]) {
             return
@@ -130,25 +148,48 @@ class EditCondo extends React.Component {
         for(let file of files) {
             let render = new FileReader()
             render.onload = (event) => {
-                if(file.size > 1000000) {
-                    let image = new Image()
-                    image.onload = () => {
-                        let tmp = this.imageToDataUrl(image, image.width / 5, image.height / 5)
-                          this.setState({img: [...this.state.img, {img_base: btoa(tmp)}] })
+                let image = new Image()
+
+                image.onload = () => {          
+                    let canvas = document.createElement("canvas")
+                    var ctx = canvas.getContext("2d")
+
+                    var MAX_WIDTH = 1280;
+                    var MAX_HEIGHT = 720;
+                    var width = image.width;
+                    var height = image.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
                     }
-                    image.src = event.target.result
-                } else {
-                     this.setState({img: [...this.state.img, {img_base: btoa(event.target.result)}] })
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(image, 0, 0, width, height);
+                    let imgnaja = canvas.toDataURL();
+                   
+                    this.setState({img: [...this.state.img, {img_base: btoa(imgnaja)}] })
+                    
                 }
+                image.src = event.target.result
             }
             render.readAsDataURL(file)
         }
         event.target.value = null
     }
 
+
     updateData = async (event) => {
         const mapImage = this.state.img.map(item => JSON.stringify(item.img_base).replace(/['"]+/g, '')) // replace for remove the double quotes
-        const getMap = mapImage.reduce((r, e) => r.push(e) && r, []) // merge array
+        const getMap = mapImage.reduce((r, e) => r.push(e) && r, [])
 
         this.setState({showedit: false, showloader: true})
 

@@ -86,7 +86,6 @@ class HomeCondo extends React.Component {
             let req = new FormData()
             req.append('id', JSON.stringify(this.state.id))
 
-            console.log(this.state.id)
             axios.post(`http://www.witrealty.co/api/estates/delete`, req).then((response) => {
                 this.fetchCondoData()
                 this.setState({showsuccess: true, idEstate: null, id: []})

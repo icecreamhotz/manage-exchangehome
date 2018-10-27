@@ -81,7 +81,8 @@ class Insertcondo extends React.Component {
     }
 
     insertData = async () => {
-
+        const mapImage = this.state.img.map(item => JSON.stringify(item.img_base).replace(/['"]+/g, '')) // replace for remove the double quotes
+        const getMap = mapImage.reduce((r, e) => r.push(e) && r, [])
         this.setState({showinsert: false})
 
         let count = 0
@@ -119,7 +120,8 @@ class Insertcondo extends React.Component {
             req.append('address', this.state.address)
             req.append('description', this.state.description)
             req.append('sale_type', this.state.saleType)
-            req.append('img', JSON.stringify(this.state.img))
+            req.append('img', JSON.stringify(getMap))
+
             await axios.post('http://www.witrealty.co/api/estates', req).then((response) => {
                 this.setState({showloader: false,showsuccess: true})
             })
@@ -135,30 +137,50 @@ class Insertcondo extends React.Component {
         for(let file of files) {
             let render = new FileReader()
             render.onload = (event) => {
-                if(file.size > 1000000) {
-                    let image = new Image()
-                    image.onload = () => {
-                        let tmp = this.imageToDataUrl(image, image.width / 5, image.height / 5)
-                          this.setState({img: [...this.state.img, btoa(tmp)] })
+                let image = new Image()
+
+                image.onload = () => {          
+                    let canvas = document.createElement("canvas")
+                    var ctx = canvas.getContext("2d")
+
+                    var MAX_WIDTH = 1280;
+                    var MAX_HEIGHT = 720;
+                    var width = image.width;
+                    var height = image.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
                     }
-                    image.src = event.target.result
-                } else {
-                     this.setState({img: [...this.state.img, btoa(event.target.result)] })
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(image, 0, 0, width, height);
+                    let imgnaja = canvas.toDataURL();
+                    this.setState({img: [...this.state.img, {img_base: btoa(imgnaja)}] })
                 }
+                image.src = event.target.result
             }
             render.readAsDataURL(file)
         }
         event.target.value = null
     }
 
-    imageToDataUrl(img, width, height) {
+    /*imageToDataUrl(img, width, height) {
         let canvas = document.createElement('canvas')
         let ctx = canvas.getContext('2d')
         canvas.width = width
         canvas.height = height
         ctx.drawImage(img, 0, 0, width, height)
         return canvas.toDataURL()
-    }
+    }*/
 
     removeImage(imagePos) {
         let filterImageArray = this.state.img.filter(item => item !== imagePos)
@@ -252,7 +274,7 @@ class Insertcondo extends React.Component {
                         <div className={"field " + (this.state.errorClass[2] ? 'error' : '')}>
                             <label>Price</label>
                             <div class="ui right labeled input">
-                                <input type="text" name="price" value={this.state.price} onChange={this.handleInputChange}/>
+                                <input type="number" name="price" value={this.state.price} onChange={this.handleInputChange}/>
                                 {this.validator.message('price', this.state.price, 'decimal')}
                                 <div class="ui basic label">
                                     THB
@@ -273,7 +295,7 @@ class Insertcondo extends React.Component {
                                 { this.state.img.map((item, index) => {
                                     return  <div class="column">
                                                 <div class="image-area">
-                                                    <div><img id="target" src={atob(item) }/>
+                                                    <div><img id="target" src={atob(item.img_base) }/>
                                                     <button class="remove-image" style={{display:"inline"}} onClick={() => {this.removeImage(item)}}>&#215;</button></div>
                                                 </div>
                                             </div>

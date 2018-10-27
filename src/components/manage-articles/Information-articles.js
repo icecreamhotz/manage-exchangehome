@@ -103,7 +103,7 @@ class InformationCondo extends React.Component {
                                             <div class="item"><img src={noimg} alt={noimg} /></div>
                                         :
                                             this.state.item[0].imgs.map(item => {
-                                                return <div class="item"><img src={atob(item.img_base)} alt={this.state.item.forum_title} style={{height:'500px'}}/></div>
+                                                return <div class="item"><img src={atob(item.img_base)} alt={this.state.item.forum_title} style={{height:'500px',width:'auto'}}/></div>
                                             })
                                         }
                                     </OwlCarousel>

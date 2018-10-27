@@ -23,7 +23,7 @@ class Insertarticles extends React.Component {
     };
 
     this.uploadImageCallBack = this.uploadImageCallBack.bind(this)
-    this.imageToDataUrl = this.imageToDataUrl.bind(this)
+  //  this.imageToDataUrl = this.imageToDataUrl.bind(this)
     this.onImageAdd = this.onImageAdd.bind(this)
     this.removeImage = this.removeImage.bind(this)
     this.handleTab = this.handleTab.bind(this);
@@ -74,29 +74,48 @@ class Insertarticles extends React.Component {
     });
   }
 
-  uploadImageCallBack(file) {
+  uploadImageCallBack = (file) => {
     return new Promise(
       (resolve, reject) => {
         const reader = new FileReader(); // eslint-disable-line no-undef
         reader.onload = (e) => {
-        
-          if(file.size > 50000) {
+      
             let image = new Image()
             image.src = e.target.result
-            image.onload = () => {
-              let tmp = this.imageToDataUrl(image, image.width / 10, image.height / 10)
-              resolve({ data: { link: tmp } });
+                image.onload = () => {          
+                    let canvas = document.createElement("canvas")
+                    var ctx = canvas.getContext("2d")
+
+                    var MAX_WIDTH = 400;
+                    var MAX_HEIGHT = 200;
+                    var width = image.width;
+                    var height = image.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(image, 0, 0, width, height);
+                    let imgnaja = canvas.toDataURL();
+              resolve({ data: { link: imgnaja } });
             }
-          } else {
-            resolve({ data: { link: e.target.result } });
-          }
         }
         reader.onerror = e => reject(e);
         reader.readAsDataURL(file);
       });
   }
 
-  onImageAdd(event) {
+  onImageAdd = (event) => {
         let files = event.target.files
         if(!files[0]) {
             return
@@ -105,36 +124,61 @@ class Insertarticles extends React.Component {
         for(let file of files) {
             let render = new FileReader()
             render.onload = (event) => {
-                if(file.size > 1000000) {
-                    let image = new Image()
-                    image.onload = () => {
-                        let tmp = this.imageToDataUrl(image, image.width / 5, image.height / 5)
-                          this.setState({img: [...this.state.img, btoa(tmp)] })
+                let image = new Image()
+                
+                image.onload = () => {          
+                    let canvas = document.createElement("canvas")
+                    var ctx = canvas.getContext("2d")
+
+                    var MAX_WIDTH = 1280;
+                    var MAX_HEIGHT = 720;
+                    var width = image.width;
+                    var height = image.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
                     }
-                    image.src = event.target.result
-                } else {
-                     this.setState({img: [...this.state.img, btoa(event.target.result)] })
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(image, 0, 0, width, height);
+                    let imgnaja = canvas.toDataURL();
+                   
+                    this.setState({img: [...this.state.img, {img_base: btoa(imgnaja)}] })
+                    
                 }
+                image.src = event.target.result
             }
             render.readAsDataURL(file)
         }
         event.target.value = null
     }
 
-  imageToDataUrl(img, width, height) {
+  /*imageToDataUrl(img, width, height) {
     let canvas = document.createElement('canvas')
     let ctx = canvas.getContext('2d')
     canvas.width = width
     canvas.height = height
     ctx.drawImage(img, 0, 0, width, height)
     return canvas.toDataURL()
-  }
+  }*/
 
   onClickSuccess = () => {
       this.setState({ showsuccess: false}, () => this.setState({redirect: true}));
   }
 
   insertData =  async () => {
+    const mapImage = this.state.img.map(item => JSON.stringify(item.img_base).replace(/['"]+/g, '')) // replace for remove the double quotes
+    const getMap = mapImage.reduce((r, e) => r.push(e) && r, [])
+    
     this.setState({showinsert: false, showloader: true})
 
     let req = new FormData()
@@ -143,7 +187,7 @@ class Insertarticles extends React.Component {
     let contentHtml = draftToHtml(convertToRaw(this.state.editorState.getCurrentContent()))
 
     req.append('content', contentHtml)
-    req.append('img', JSON.stringify(this.state.img))
+    req.append('img', JSON.stringify(getMap))
 
     await axios.post('http://www.witrealty.co/api/forums', req).then((response) => {
       this.setState({showsuccess: true, showloader: false})
@@ -168,28 +212,6 @@ class Insertarticles extends React.Component {
                 <input type="text" name="title" value={this.state.title} onChange={this.handleInputChange} />
               </div>
               <div class="field">
-                  <label>Images</label>
-                  <div class="ui two column stackable grid">
-                    { this.state.img.map((item, index) => {
-                      return  <div class="column">
-                            <div class="image-area">
-                                <div><img id="target" src={atob(item) }/>
-                                 <button class="remove-image" style={{display:"inline"}} onClick={() => {this.removeImage(item)}}>&#215;</button></div>
-                            </div>
-                                </div>
-                      })
-                    }
-                  </div>
-              </div>
-              <div class="field mt-30">
-                  <div class="ui fluid action input">
-                      <label for="file" class="ui icon button">
-                      <i class="file icon"></i>
-                          Open File</label>
-                      <input type="file" id="file" onChange={this.onImageAdd} style={{display:'none'}} />
-                  </div>
-              </div>
-              <div class="field">
                 <label>Content</label>
                 <Editor
                     editorState={editorState}
@@ -204,6 +226,28 @@ class Insertarticles extends React.Component {
                       },
                     }}
                 />
+              </div>
+              <div class="field">
+                  <label>Images</label>
+                   <div class="ui two column stackable grid">
+                    { this.state.img.map((item, index) => {
+                      return  <div class="column">
+                            <div class="image-area">
+                                <div><img id="target" src={atob(item.img_base) }/>
+                                 <button class="remove-image" style={{display:"inline"}} onClick={() => {this.removeImage(item)}}>&#215;</button></div>
+                            </div>
+                                </div>
+                      })
+                    }
+                  </div> 
+              </div>
+              <div class="field mt-30">
+                  <div class="ui fluid action input">
+                      <label for="file" class="ui icon button">
+                      <i class="file icon"></i>
+                          Open File</label>
+                      <input type="file" id="file" onChange={this.onImageAdd} style={{display:'none'}} />
+                  </div>
               </div>
               <div class="field">
                  <button class="ui fluid inverted green button" type="button" onClick={() => {this.setState({showinsert: true})}}>Submit</button>
